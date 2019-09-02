@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-@RequestMapping("movieSchdeule")
+@RequestMapping("movieSchedule")
 @RestController
 public class MovieScheduleController {
 	
@@ -27,7 +27,8 @@ public class MovieScheduleController {
 	}
 	
 	@GetMapping("/findByDate")
-	public List<MovieScheduleModel> list(@RequestParam(name="date",required=true) LocalDate date) {
-		return movieTheatreService.listMovieSchedules(date);
+	public List<MovieScheduleModel> list(@RequestParam(name="date",required=true) String date) {
+		LocalDate given = LocalDate.parse(date);
+		return movieTheatreService.listMovieSchedules(given);
 	}
 }

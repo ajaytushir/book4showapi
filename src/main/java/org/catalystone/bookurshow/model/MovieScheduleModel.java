@@ -2,7 +2,7 @@ package org.catalystone.bookurshow.model;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 
 import org.catalystone.bookurshow.domain.MovieSchedule;
 import org.catalystone.bookurshow.domain.MovieSchedule.TimeSlot;
@@ -14,10 +14,10 @@ public class MovieScheduleModel {
 	private Long movieTheatre;
 	private Long movie;
 	private String movieName;
-	private LocalTime movieDuration;
+	private String movieDuration;
 	private TimeSlot timeSlot;
-	private LocalDate from;
-	private LocalDate to;
+	private String from;
+	private String to;
 	private BigDecimal price;
 	private boolean deleted;
 	
@@ -25,27 +25,28 @@ public class MovieScheduleModel {
 	public MovieSchedule getDomain() {
 		MovieSchedule movieSchedule = new MovieSchedule();
 		movieSchedule.setDeleted(this.isDeleted());
-		movieSchedule.setFrom(this.getFrom());
+		movieSchedule.setFrom(LocalDate.parse(this.from));
 		movieSchedule.setId(this.id);
 		movieSchedule.setPrice(this.getPrice());
 		movieSchedule.setTimeSlot(this.getTimeSlot());
-		movieSchedule.setTo(this.getTo());
+		movieSchedule.setTo(LocalDate.parse(this.to));
 		return movieSchedule;
 	}
 	
 	public static MovieScheduleModel getInstance(MovieSchedule movieSchedule) {
 		MovieScheduleModel movieScheduleModel= new MovieScheduleModel();
 		movieScheduleModel.setDeleted(movieSchedule.isDeleted());
-		movieScheduleModel.setFrom(movieSchedule.getFrom());
+		movieScheduleModel.setFrom(movieSchedule.getFrom().format(DateTimeFormatter.ISO_LOCAL_DATE));
 		movieScheduleModel.setId(movieSchedule.getId());
 		movieScheduleModel.setMovie(movieSchedule.getMovie().getId());
 		movieScheduleModel.setMovieTheatre(movieSchedule.getMovieTheatre().getId());
 		movieScheduleModel.setPrice(movieSchedule.getPrice());
 		movieScheduleModel.setTimeSlot(movieSchedule.getTimeSlot());
-		movieScheduleModel.setTo(movieSchedule.getTo());
+		movieScheduleModel.setTo(movieSchedule.getTo().format(DateTimeFormatter.ISO_LOCAL_DATE));
 		
 		movieScheduleModel.movieName = movieSchedule.getMovie().getName();
-		movieScheduleModel.movieDuration = movieSchedule.getMovie().getDuration();
+		if( movieSchedule.getMovie().getDuration()!=null)
+			movieScheduleModel.movieDuration = movieSchedule.getMovie().getDuration().format(DateTimeFormatter.ofPattern("hh:mm"));
 		return movieScheduleModel;
 	}
 
@@ -81,19 +82,19 @@ public class MovieScheduleModel {
 		this.timeSlot = timeSlot;
 	}
 
-	public LocalDate getFrom() {
+	public String getFrom() {
 		return from;
 	}
 
-	public void setFrom(LocalDate from) {
+	public void setFrom(String from) {
 		this.from = from;
 	}
 
-	public LocalDate getTo() {
+	public String getTo() {
 		return to;
 	}
 
-	public void setTo(LocalDate to) {
+	public void setTo(String to) {
 		this.to = to;
 	}
 

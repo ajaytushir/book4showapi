@@ -13,9 +13,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
-import lombok.Getter;
-import lombok.Setter;
-
 @Entity
 @Table(name = MovieSchedule.TABLE_NAME)
 public class MovieSchedule {
@@ -33,7 +30,7 @@ public class MovieSchedule {
 	@JoinColumn(name = "MOVIE_THEATRE_ID")
 	private MovieTheatre movieTheatre;
 
-	@ManyToOne(fetch = FetchType.LAZY)
+	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "MOVIE_ID")
 	private Movie movie;
 
