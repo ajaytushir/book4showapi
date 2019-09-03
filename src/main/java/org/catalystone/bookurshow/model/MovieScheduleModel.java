@@ -12,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 public class MovieScheduleModel {
 	private Long id;
 	private Long movieTheatre;
+	private String movieTheatreName;
 	private Long movie;
 	private String movieName;
 	private String movieDuration;
@@ -39,7 +40,9 @@ public class MovieScheduleModel {
 		movieScheduleModel.setFrom(movieSchedule.getFrom().format(DateTimeFormatter.ISO_LOCAL_DATE));
 		movieScheduleModel.setId(movieSchedule.getId());
 		movieScheduleModel.setMovie(movieSchedule.getMovie().getId());
+		movieScheduleModel.setMovieName(movieSchedule.getMovie().getName());
 		movieScheduleModel.setMovieTheatre(movieSchedule.getMovieTheatre().getId());
+		movieScheduleModel.setMovieTheatreName(movieSchedule.getMovieTheatre().getName());
 		movieScheduleModel.setPrice(movieSchedule.getPrice());
 		movieScheduleModel.setTimeSlot(movieSchedule.getTimeSlot());
 		movieScheduleModel.setTo(movieSchedule.getTo().format(DateTimeFormatter.ISO_LOCAL_DATE));
@@ -64,6 +67,22 @@ public class MovieScheduleModel {
 
 	public void setMovieTheatre(Long movieTheatre) {
 		this.movieTheatre = movieTheatre;
+	}
+
+	public String getMovieTheatreName() {
+		return movieTheatreName;
+	}
+
+	public void setMovieTheatreName(String movieTheatreName) {
+		this.movieTheatreName = movieTheatreName;
+	}
+
+	public String getMovieName() {
+		return movieName;
+	}
+
+	public void setMovieName(String movieName) {
+		this.movieName = movieName;
 	}
 
 	public Long getMovie() {
