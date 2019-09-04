@@ -1,5 +1,6 @@
 package org.catalystone.bookurshow.domain;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import javax.persistence.Entity;
@@ -31,6 +32,7 @@ public class Booking {
 	private MovieSchedule movieSchedule;
 	
 	private Integer seatCount;
+	private LocalDate bookingDate;
 	private LocalDateTime created = LocalDateTime.now();
 	public Long getId() {
 		return id;
@@ -55,6 +57,13 @@ public class Booking {
 	}
 	public void setSeatCount(Integer seatCount) {
 		this.seatCount = seatCount;
+	}
+	
+	public LocalDate getBookingDate() {
+		return bookingDate;
+	}
+	public void setBookingDate(LocalDate bookingDate) {
+		this.bookingDate = bookingDate;
 	}
 	public LocalDateTime getCreated() {
 		return created;

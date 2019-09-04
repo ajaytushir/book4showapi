@@ -1,5 +1,6 @@
 package org.catalystone.bookurshow.model;
 
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 import org.catalystone.bookurshow.domain.Booking;
@@ -15,6 +16,7 @@ public class BookingModel {
 	private String movieName;
 	private String movieTheatreName;
 	private Integer seatCount;
+	private String bookingDate;
 	private String created;
 	
 	@JsonIgnore
@@ -22,6 +24,7 @@ public class BookingModel {
 		Booking booking = new Booking();
 		booking.setId(this.getId());
 		booking.setSeatCount(this.getSeatCount());
+		booking.setBookingDate(LocalDate.parse(this.getBookingDate()));
 		return booking;
 	}
 	
@@ -34,6 +37,7 @@ public class BookingModel {
 		bookingModel.setSeatCount(booking.getSeatCount());
 		bookingModel.setUserId(booking.getUser().getId());
 		bookingModel.setUsername(booking.getUser().getEmail());
+		bookingModel.setBookingDate(booking.getBookingDate().format(DateTimeFormatter.ISO_LOCAL_DATE));
 		bookingModel.setCreated(booking.getCreated().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
 		return bookingModel;
 	}
@@ -92,6 +96,14 @@ public class BookingModel {
 
 	public void setSeatCount(Integer seatCount) {
 		this.seatCount = seatCount;
+	}
+
+	public String getBookingDate() {
+		return bookingDate;
+	}
+
+	public void setBookingDate(String bookingDate) {
+		this.bookingDate = bookingDate;
 	}
 
 	public String getCreated() {

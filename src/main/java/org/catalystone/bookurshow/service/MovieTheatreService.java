@@ -96,17 +96,27 @@ public class MovieTheatreService {
 
 	public BookingModel addBooking(BookingModel bookingModel) throws APIException {
 		Booking booking = bookingModel.getDomain();
-
+		
+		if (booking.getSeatCount() >9) {
+			throw new APIException("BK-01", "Can not book more than 9 seats.");
+		}
 		String username = userAuthentication.getLoggedInUser();
 		User user = userRepository.findByEmail(username);
 		booking.setUser(user);
 
 		MovieSchedule movieSchedule = findMovieScheduleId(bookingModel.getMovieScheduleId());
 		if (movieSchedule == null) {
-			throw new APIException("BK-01", "Please select valid movie schedule.");
+			throw new APIException("BK-02", "Please select valid movie schedule.");
 		}
 		booking.setMovieSchedule(movieSchedule);
-
+		
+		Integer seatBooked = bookRepository.getTotalSeatCount(movieSchedule.getId(), booking.getBookingDate());
+		seatBooked = seatBooked==null?0:seatBooked;
+		Integer totalSeat = movieSchedule.getMovieTheatre().getSeatCount();	
+		if(seatBooked + booking.getSeatCount() > totalSeat) {
+			throw new APIException("BK-03", String.format("Only %d seats available for this show.", totalSeat-seatBooked));
+		}
+		
 		booking = bookRepository.save(booking);
 		return BookingModel.getInstance(booking);
 	}

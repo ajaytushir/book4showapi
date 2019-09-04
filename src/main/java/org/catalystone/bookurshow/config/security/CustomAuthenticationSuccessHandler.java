@@ -21,7 +21,6 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
 			Authentication authentication) throws IOException, ServletException {
 
 		response.setStatus(HttpStatus.OK.value());
-		authentication.getPrincipal();
 		response.getOutputStream().println(objectMapper.writeValueAsString(authentication.getPrincipal()));
 	}
 }

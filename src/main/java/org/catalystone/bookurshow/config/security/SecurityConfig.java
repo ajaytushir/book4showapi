@@ -8,6 +8,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 
 @EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
@@ -23,13 +24,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 			.authorizeRequests()
 		
 				// Anonymous User accessible URIs
-				.antMatchers("/movieTheatre/list", "/movie/list", "/movieSchedule/list", "/user/register")
+				.antMatchers("/movieTheatre/list", "/movie/list", "/movieSchedule/list", "/user/register", "/logout").permitAll()
 				// Admin only accessible URIs
-				.permitAll().antMatchers("/movieTheatre/add", "/movie/add", "movieSchedule/add").hasAnyRole("ADMIN")
+				.antMatchers("/movieTheatre/add", "/movie/add", "movieSchedule/add").hasAnyRole("ADMIN")
 				// Logged in user only accessible URIs
+				.antMatchers("/booking/add", "/booking/list").authenticated()
 				
 				.and().formLogin().failureHandler(failureHandler()).successHandler(successHandler())
-				.and().logout().logoutUrl("/logout")
+				.and().logout().logoutUrl("/logout").deleteCookies("JSESSIONID").logoutSuccessHandler(logoutHandler())
 				.and().cors().and().csrf().disable();
 				
 	}
@@ -42,5 +44,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	@Bean
 	public AuthenticationSuccessHandler successHandler() {
 		return new CustomAuthenticationSuccessHandler();
+	}
+	
+
+	@Bean
+	public LogoutSuccessHandler logoutHandler() {
+		return new CustomLogoutSuccessHandler();
 	}
 }
