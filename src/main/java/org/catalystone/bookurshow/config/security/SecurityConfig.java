@@ -26,7 +26,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 				// Anonymous User accessible URIs
 				.antMatchers("/movieTheatre/list", "/movie/list", "/movieSchedule/list", "/user/register", "/logout").permitAll()
 				// Admin only accessible URIs
-				.antMatchers("/movieTheatre/add", "/movie/add", "movieSchedule/add").hasAnyRole("ADMIN")
+				.antMatchers("/movieTheatre/add", "/movie/add", "movieSchedule/add", "movieSchedule/listStream", "/movieSchedule/batch").hasAnyRole("ADMIN")
 				// Logged in user only accessible URIs
 				.antMatchers("/booking/add", "/booking/list").authenticated()
 				

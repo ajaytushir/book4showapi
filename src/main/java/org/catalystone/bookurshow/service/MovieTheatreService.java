@@ -1,9 +1,18 @@
 package org.catalystone.bookurshow.service;
 
+import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
 import org.catalystone.bookurshow.config.security.UserAuthentication;
 import org.catalystone.bookurshow.dao.IBookingRepository;
@@ -23,6 +32,11 @@ import org.catalystone.bookurshow.model.MovieScheduleModel;
 import org.catalystone.bookurshow.model.MovieTheatreModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 public class MovieTheatreService {
@@ -42,8 +56,13 @@ public class MovieTheatreService {
 	@Autowired
 	private IBookingRepository bookRepository;
 
+	@PersistenceContext
+	private EntityManager em;
+
 	@Autowired
 	private UserAuthentication userAuthentication;
+
+	private ObjectMapper objectMapper = new ObjectMapper();
 
 	public MovieTheatreModel addMovieTheatre(MovieTheatreModel movieTheatreModel) {
 		MovieTheatre movieTheatre = movieTheatreModel.getDomain();
@@ -88,6 +107,37 @@ public class MovieTheatreService {
 		return MovieScheduleModel.getInstance(movieSchedule);
 	}
 
+	public void addMovieScheduleBatch(LocalDate scheduleDateStart, LocalDate endDate) throws APIException {
+
+		List<MovieTheatre> movieTheatres = movieTheatreRepository.findAll();
+		List<Movie> movies = movieRepository.findAll();
+		Function<List<Movie>, Movie> getRandomMovie = (List<Movie> movieList) -> {
+			Random r = new Random();
+			Integer index = r.nextInt(movieList.size());
+			// System.out.println("Index generated : " + index);
+			return movieList.get(index);
+		};
+
+		for (MovieTheatre movieTheatre : movieTheatres) {
+			List<MovieSchedule> movieScheduleList = new ArrayList<MovieSchedule>(1480);
+			LocalDate scheduleDate = scheduleDateStart;
+			while (!scheduleDate.isEqual(endDate)) {
+				for (MovieSchedule.TimeSlot timeSlot : MovieSchedule.TimeSlot.values()) {
+					MovieSchedule schedule = new MovieSchedule();
+					schedule.setFrom(scheduleDate);
+					schedule.setTo(scheduleDate);
+					schedule.setMovie(getRandomMovie.apply(movies));
+					schedule.setMovieTheatre(movieTheatre);
+					schedule.setPrice(BigDecimal.TEN);
+					schedule.setTimeSlot(timeSlot);
+					movieScheduleList.add(schedule);
+				}
+				scheduleDate = scheduleDate.plusDays(1);
+			}
+			movieScheduleRepository.saveAll(movieScheduleList);
+		}
+	}
+
 	public List<MovieScheduleModel> listMovieSchedules(LocalDate date) {
 		List<MovieSchedule> movieSchedules = movieScheduleRepository.findByDate(date);
 		return movieSchedules.stream().map(movieSchedule -> MovieScheduleModel.getInstance(movieSchedule))
@@ -96,8 +146,8 @@ public class MovieTheatreService {
 
 	public BookingModel addBooking(BookingModel bookingModel) throws APIException {
 		Booking booking = bookingModel.getDomain();
-		
-		if (booking.getSeatCount() >9) {
+
+		if (booking.getSeatCount() > 9) {
 			throw new APIException("BK-01", "Can not book more than 9 seats.");
 		}
 		String username = userAuthentication.getLoggedInUser();
@@ -109,24 +159,74 @@ public class MovieTheatreService {
 			throw new APIException("BK-02", "Please select valid movie schedule.");
 		}
 		booking.setMovieSchedule(movieSchedule);
-		
+
 		Integer seatBooked = bookRepository.getTotalSeatCount(movieSchedule.getId(), booking.getBookingDate());
-		seatBooked = seatBooked==null?0:seatBooked;
-		Integer totalSeat = movieSchedule.getMovieTheatre().getSeatCount();	
-		if(seatBooked + booking.getSeatCount() > totalSeat) {
-			throw new APIException("BK-03", String.format("Only %d seats available for this show.", totalSeat-seatBooked));
+		seatBooked = seatBooked == null ? 0 : seatBooked;
+		Integer totalSeat = movieSchedule.getMovieTheatre().getSeatCount();
+		if (seatBooked + booking.getSeatCount() > totalSeat) {
+			throw new APIException("BK-03",
+					String.format("Only %d seats available for this show.", totalSeat - seatBooked));
 		}
-		
+
 		booking = bookRepository.save(booking);
 		return BookingModel.getInstance(booking);
 	}
 
-	public List<BookingModel> listBookings() {
+	public List<BookingModel> listBookingsByUser() {
 		String username = userAuthentication.getLoggedInUser();
 		User user = userRepository.findByEmail(username);
 
 		List<Booking> bookings = bookRepository.findByUserId(user.getId());
 		return bookings.stream().map(booking -> BookingModel.getInstance(booking)).collect(Collectors.toList());
+	}
+
+	@Transactional
+	public void listSchedules(SseEmitter emitter) {
+
+		try (Stream<MovieSchedule> stream = movieScheduleRepository.streamList().parallel()) {
+			stream.map(movieSchedule -> {
+				MovieScheduleModel temp = MovieScheduleModel.getInstance(movieSchedule);
+				em.detach(movieSchedule);
+				return temp;
+			}).forEach(movieSchedule -> {
+				
+				try {
+					emitter.send(objectMapper.writeValueAsString(movieSchedule));
+				} catch (JsonProcessingException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			});
+		} catch (Exception e) {
+			//e.printStackTrace();
+			//throw new RuntimeException("Exception occurred while exporting results", e);
+		}
+	}
+
+	@Transactional
+	public void listBookings(SseEmitter emitter) {
+		Stream<BookingModel> stream = bookRepository.streamList().map(booking -> BookingModel.getInstance(booking));
+		stream.forEach(booking -> {
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+
+			try {
+				emitter.send(objectMapper.writeValueAsString(booking));
+			} catch (JsonProcessingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		});
 	}
 
 	private Movie findMovieById(Long movieId) {
