@@ -20,6 +20,10 @@ public interface IMovieScheduleRepository extends CrudRepository<MovieSchedule, 
 	@Query("select ms from MovieSchedule ms where ms.from<= :date AND ms.to>= :date")
 	public List<MovieSchedule> findByDate(@Param("date") LocalDate date);
 	
+
+	@Query("select ms from MovieSchedule ms where ms.movieTheatre.id= :movieTheatreId AND ms.to>= :date")
+	public List<MovieSchedule> findTheatreScheduleByDate(@Param("date") LocalDate date, @Param("movieTheatreId") Long movieTheatreId);
+	
 	 @QueryHints(value = {
 	            @QueryHint(name = HINT_FETCH_SIZE, value = "" + 15000),
 	            @QueryHint(name = HINT_CACHEABLE, value = "false"),

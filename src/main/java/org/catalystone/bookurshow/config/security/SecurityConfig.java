@@ -19,21 +19,24 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	}
 
 	protected void configure(HttpSecurity http) throws Exception {
-		http
-			.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.ALWAYS).and()
-			.authorizeRequests()
-		
+		http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.ALWAYS).and().exceptionHandling()
+				.authenticationEntryPoint(getEntryPoint())
+				.and()
+				.authorizeRequests()
 				// Anonymous User accessible URIs
-				.antMatchers("/movieTheatre/list", "/movie/list", "/movieSchedule/list", "/user/register", "/logout").permitAll()
-				// Admin only accessible URIs
-				.antMatchers("/movieTheatre/add", "/movie/add", "movieSchedule/add", "movieSchedule/listStream", "/movieSchedule/batch").hasAnyRole("ADMIN")
+				.antMatchers("/movieTheatre/list", "/movie/list", "/movieSchedule/list", "/user/register", "/logout")
+				.permitAll()
 				// Logged in user only accessible URIs
 				.antMatchers("/booking/add", "/booking/list").authenticated()
-				
-				.and().formLogin().failureHandler(failureHandler()).successHandler(successHandler())
-				.and().logout().logoutUrl("/logout").deleteCookies("JSESSIONID").logoutSuccessHandler(logoutHandler())
-				.and().cors().and().csrf().disable();
-				
+				// Admin only accessible URIs
+				.antMatchers("/movietheatre/add", "/movietheatre/update", "/movietheatre/delete/**", "/movie/add",
+						"movieSchedule/add", "movieSchedule/listStream", "/movieSchedule/batch")
+				.hasAuthority("ADMIN")
+
+				.and().formLogin().failureHandler(failureHandler()).successHandler(successHandler()).and().logout()
+				.logoutUrl("/logout").deleteCookies("JSESSIONID").logoutSuccessHandler(logoutHandler()).and().cors()
+				.and().csrf().disable();
+
 	}
 
 	@Bean
@@ -45,10 +48,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	public AuthenticationSuccessHandler successHandler() {
 		return new CustomAuthenticationSuccessHandler();
 	}
-	
 
 	@Bean
 	public LogoutSuccessHandler logoutHandler() {
 		return new CustomLogoutSuccessHandler();
+	}
+
+	@Bean
+	public RestAuthenticationEntryPoint getEntryPoint() {
+		return new RestAuthenticationEntryPoint();
 	}
 }

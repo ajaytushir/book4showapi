@@ -1,28 +1,15 @@
 package org.catalystone.bookurshow.controller;
 
-import java.io.IOException;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.stream.Stream;
+import java.util.List;
 
 import org.catalystone.bookurshow.model.APIException;
 import org.catalystone.bookurshow.model.BookingModel;
 import org.catalystone.bookurshow.service.MovieTheatreService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
 
 @RestController
 @RequestMapping("/booking")
@@ -36,7 +23,7 @@ public class BookingController {
 		return movieTheatreService.addBooking(bookingModel);
 	}
 
-	@GetMapping("/list")
+	/*@GetMapping("/list")
 	@Transactional(readOnly = true)
 	public ResponseEntity<StreamingResponseBody> list() {
 		// Stream<BookingModel> output = movieTheatreService.listBookings();
@@ -77,5 +64,11 @@ public class BookingController {
 			emitter.complete();
 		});
 		return emitter;
+	}*/
+	
+
+	@PostMapping("/list")
+	public List<BookingModel> list() throws APIException {
+		return movieTheatreService.listBookingsByUser();
 	}
 }

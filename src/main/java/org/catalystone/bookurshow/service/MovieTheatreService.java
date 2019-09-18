@@ -76,6 +76,30 @@ public class MovieTheatreService {
 				.collect(Collectors.toList());
 	}
 
+	public MovieTheatreModel updateMovieTheatre(MovieTheatreModel movieTheatreModel) throws APIException {
+		MovieTheatre movieTheatre = findMovieTheatreById(movieTheatreModel.getId());
+		
+		movieTheatre.setAddress(movieTheatreModel.getAddress());
+		movieTheatre.setName(movieTheatreModel.getName());
+		movieTheatre.setSeatCount(movieTheatreModel.getSeatCount());
+		
+		movieTheatre = movieTheatreRepository.save(movieTheatre);
+		return MovieTheatreModel.getInstance(movieTheatre);
+	}
+
+	public MovieTheatreModel deleteMovieTheatre(Long movieTheatreId) throws APIException {
+
+		MovieTheatre movieTheatre = findMovieTheatreById(movieTheatreId);
+		
+		List<MovieSchedule> movieSchedules = movieScheduleRepository.findTheatreScheduleByDate(LocalDate.now(), movieTheatreId);
+		if(movieSchedules==null || movieSchedules.size()>0) {
+			throw new APIException("MT-02", "This theatre has already scheduled some shows in future.");
+		}
+		movieTheatre.setDeleted(true);
+		movieTheatre = movieTheatreRepository.save(movieTheatre);
+		return MovieTheatreModel.getInstance(movieTheatre);
+	}
+
 	public MovieModel addMovie(MovieModel movieModel) {
 		Movie movie = movieModel.getDomain();
 		movie = movieRepository.save(movie);
@@ -98,8 +122,9 @@ public class MovieTheatreService {
 		movieSchedule.setMovie(movie);
 
 		MovieTheatre movieTheatre = findMovieTheatreById(movieScheduleModel.getMovieTheatre());
-		if (movieTheatre == null) {
-			throw new APIException("MS-02", "Please select valid movie theatre.");
+		
+		if (movieTheatre.isDeleted()) {
+			throw new APIException("MS-02", "Movie theatre is no longer exist.");
 		}
 		movieSchedule.setMovieTheatre(movieTheatre);
 
@@ -150,6 +175,11 @@ public class MovieTheatreService {
 		if (booking.getSeatCount() > 9) {
 			throw new APIException("BK-01", "Can not book more than 9 seats.");
 		}
+		
+		if (booking.getBookingDate().isBefore(LocalDate.now())) {
+			throw new APIException("BK-04", "Can not book for past.");
+		}
+		
 		String username = userAuthentication.getLoggedInUser();
 		User user = userRepository.findByEmail(username);
 		booking.setUser(user);
@@ -189,7 +219,7 @@ public class MovieTheatreService {
 				em.detach(movieSchedule);
 				return temp;
 			}).forEach(movieSchedule -> {
-				
+
 				try {
 					emitter.send(objectMapper.writeValueAsString(movieSchedule));
 				} catch (JsonProcessingException e) {
@@ -201,8 +231,8 @@ public class MovieTheatreService {
 				}
 			});
 		} catch (Exception e) {
-			//e.printStackTrace();
-			//throw new RuntimeException("Exception occurred while exporting results", e);
+			// e.printStackTrace();
+			// throw new RuntimeException("Exception occurred while exporting results", e);
 		}
 	}
 
@@ -239,13 +269,13 @@ public class MovieTheatreService {
 		}
 	}
 
-	private MovieTheatre findMovieTheatreById(Long movieTheatreId) {
+	private MovieTheatre findMovieTheatreById(Long movieTheatreId) throws APIException {
 		Optional<MovieTheatre> movieTheatre = movieTheatreRepository.findById(movieTheatreId);
 
 		if (movieTheatre.isPresent()) {
 			return movieTheatre.get();
 		} else {
-			return null;
+			throw new APIException("MT-01", "Please select valid movie theatre.");
 		}
 	}
 

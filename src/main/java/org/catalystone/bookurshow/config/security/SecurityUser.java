@@ -15,7 +15,7 @@ public class SecurityUser implements UserDetails{
 	public static final GrantedAuthority ADMIN_ROLE = new GrantedAuthority() {
 		@Override
 		public String getAuthority() {
-			return "ROLE_ADMIN";
+			return "ADMIN";
 		}
 	};
 	

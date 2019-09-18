@@ -26,7 +26,7 @@ public class MovieTheatreModel {
 		MovieTheatreModel movieTheatreModel = new MovieTheatreModel();
 		movieTheatreModel.setId(movieTheatre.getId());
 		movieTheatreModel.setAddress(movieTheatre.getAddress());
-		//movieTheatreModel.setDeleted(movieTheatre.get);
+		movieTheatreModel.setDeleted(movieTheatre.isDeleted());
 		movieTheatreModel.setName(movieTheatre.getName());
 		movieTheatreModel.setSeatCount(movieTheatre.getSeatCount());
 		return movieTheatreModel;
