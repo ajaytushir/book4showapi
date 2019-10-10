@@ -27,7 +27,7 @@ public class WebConfig implements WebMvcConfigurer  {
 
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		CorsConfiguration config = new CorsConfiguration();
-		config.setAllowedOrigins(Arrays.asList("http://localhost:4200"));
+		config.setAllowedOrigins(Arrays.asList("https://book4show.herokuapp.com", "http://localhost:4200"));
 		config.setAllowedMethods(Arrays.asList("GET", "POST"));
 		config.setAllowCredentials(true); // you USUALLY want this
 		// config.addAllowedOrigin("*");
